@@ -1,12 +1,12 @@
 # compute_shader_samples
 
-This repository holds a list of sample to illustrate the usage of Compute Shaders for GPGPU (General Purpose GPU) tasks.
+This repository holds a list of samples to illustrate the usage of Compute Shaders for GPGPU (General Purpose GPU) tasks.
 
 ## List of samples
 
 | Name | Description |
 |---|---|
-| ssbo_sample | Basic sample with use of Shader Storage Buffer Objects |
+| ssbo_sample | OpenGL basic sample with use of Shader Storage Buffer Objects |
 
 
 ## Build
