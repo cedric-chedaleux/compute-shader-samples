@@ -1,0 +1,15 @@
+#version 430
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout (std430, binding = 0) buffer InputSSBO {
+    int data[];
+} inputs;
+layout (std430, binding = 1) buffer OutputSSBO {
+    int data[];
+} outputs;
+
+void main() {
+    // gl_GlobalInvocationID is a uvec3 variable giving the global ID of the thread
+    uint threadIndex = gl_GlobalInvocationID.x;
+    outputs.data[threadIndex] = inputs.data[threadIndex] * 2;
+}
