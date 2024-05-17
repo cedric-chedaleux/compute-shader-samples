@@ -95,3 +95,13 @@ std::string getGLSLShaderDirectory() {
     return "";
 #endif
 }
+
+std::string getBinDirectory() {
+#ifdef __linux__
+    return getInstallDirectory() + "/bin/";
+#elif _WIN32
+    return getInstallDirectory() + "\\bin\\";
+#else
+    return "";
+#endif
+}

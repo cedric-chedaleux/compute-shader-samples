@@ -1,0 +1,17 @@
+#version 430
+
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+// We could have used a texture sampler to access our image here, but we do not need
+// texture sampling (interpolation, texels...), so imageLoad is sufficient to get access
+// to our image data
+layout(binding = 0, rgba8ui) readonly uniform uimage2D inImage;
+layout(binding = 1, rgba8ui) writeonly uniform uimage2D outImage;
+
+void main() {
+    ivec2 threadIndex = ivec2(gl_GlobalInvocationID.xy);
+    uvec4 iPixel = imageLoad(inImage, threadIndex);
+    // Easy color to gray scale conversion is to take the average of red, green and blue values
+    uint color = (iPixel.r + iPixel.g + iPixel.b) / 3;
+    imageStore(outImage, threadIndex, uvec4(color, color, color, 255));
+}
