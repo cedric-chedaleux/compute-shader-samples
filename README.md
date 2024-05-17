@@ -8,6 +8,7 @@ This repository holds a list of samples to illustrate the usage of Compute Shade
 |---|---|
 | ssbo_sample | OpenGL sample that performs parallel operation on a vector of integers using Shader Storage Buffer Objects and workgroups |
 | img_generation | OpenGL sample that generates a procedural image thanks to workgroups and ImageStore() method |
+| convert2bw | OpenGL sample that converts a color image to a grayscale image using imageLoad/Store |
 
 
 ## Build
