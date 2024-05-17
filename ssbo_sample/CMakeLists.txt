@@ -3,7 +3,7 @@ project(ssbo_sample)
 
 include_directories("../common")
 add_executable(${PROJECT_NAME}
-  main.cpp
+  ssbo_sample.cpp
 )
 
 find_package(OpenGL REQUIRED)

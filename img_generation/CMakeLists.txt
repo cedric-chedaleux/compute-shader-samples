@@ -3,7 +3,7 @@ project(img_generation)
 
 include_directories("../common")
 add_executable(${PROJECT_NAME}
-  main.cpp
+  img_generation.cpp
 )
 
 find_package(OpenGL REQUIRED)
