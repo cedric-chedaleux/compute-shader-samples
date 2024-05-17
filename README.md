@@ -6,7 +6,8 @@ This repository holds a list of samples to illustrate the usage of Compute Shade
 
 | Name | Description |
 |---|---|
-| ssbo_sample | OpenGL basic sample with use of Shader Storage Buffer Objects |
+| ssbo_sample | OpenGL sample that perform parallel operation on a vector using Shader Storage Buffer Objects and workgroups |
+| img_generation | OpenGL sample that generates a procedural image thanks to workgroups and ImageStore() method |
 
 
 ## Build
@@ -23,6 +24,8 @@ $ cmake --build build --target install
 ```
 $ ./install/bin/ssbo_sample
 ...
+$ ./install/bin/img_generation
+Image saved to 'image.png'
 ```
 
 ## License
