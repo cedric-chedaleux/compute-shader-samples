@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(ssbo_sample)
+project(img_generation)
 
 include_directories("../common")
 add_executable(${PROJECT_NAME}
