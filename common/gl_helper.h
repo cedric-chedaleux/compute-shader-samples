@@ -53,6 +53,29 @@ void GLErrorCheck(const char *message)
 }
 #endif
 
+void printGLInfo() {
+    printf("============  GL Info  ===============\n");
+    printf("OpenGL version          = %s\n", glGetString(GL_VENDOR));
+    printf("OpenGL renderer         = %s\n", glGetString(GL_RENDERER));
+    printf("OpenGL vendor           = %s\n", glGetString(GL_VERSION));
+    printf("OpenGL Language version = %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+    GLint maxWGInvokations = 0;
+    glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &maxWGInvokations);
+    GLint maxWGCount[3];
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWGCount[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWGCount[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWGCount[2]);
+    GLint maxWGSize[3];
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &maxWGSize[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &maxWGSize[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &maxWGSize[2]);
+    printf("Max number of workgroups   = %i, %i, %i\n", maxWGCount[0], maxWGCount[1], maxWGCount[2]);
+    printf("Max size of a workgroup    = %i, %i, %i\n", maxWGSize[0], maxWGSize[1], maxWGSize[2]);
+    printf("Max number of invokations in a workgroup = %i\n", maxWGInvokations);
+    printf("======================================\n");
+    printf("\n");
+}
+
 GLuint createComputeShader(const std::string& filename)
 {
     // Creating the compute shader, and the program object containing the shader
@@ -133,3 +156,36 @@ void closeGL()
     glfwDestroyWindow(offscreen_context);
     glfwTerminate();
 }
+
+class GLTime
+{
+public:
+    GLTime() {
+        glGenQueries(1, query);
+    }
+
+    void start() {
+        glBeginQuery(GL_TIME_ELAPSED, query[0]);
+    }
+
+    void end() {
+        glEndQuery(GL_TIME_ELAPSED);
+    }
+
+    float timeInMs() const
+    {
+        int done;
+        glGetQueryObjectiv(query[0], GL_QUERY_RESULT_AVAILABLE, &done);
+        if (!done)
+        {
+            return 0.f;
+        }
+        GLuint64 time;
+        glGetQueryObjectui64v(query[0], GL_QUERY_RESULT, &time);
+        return time / 1e6;
+    }
+
+    unsigned int query[1];
+
+
+};

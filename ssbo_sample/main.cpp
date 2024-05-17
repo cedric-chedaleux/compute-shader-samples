@@ -18,7 +18,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <iterator>
 #include <numeric>
+#include <chrono>
 
 #include "helper.h"
 #include "gl_helper.h"
@@ -34,8 +36,23 @@ std::vector<int> createSuccessiveVector(size_t count)
 void printArrays(const char *msg, const std::vector<int> &arr)
 {
     printf("%s: ", msg);
-    for (auto &i : arr)
-        printf("%i,", i);
+    if (arr.size() <= 8)
+    {
+        for (auto &i : arr)
+            printf("%i,", i);
+    }
+    else
+    {
+        auto bIt = arr.cbegin();
+        auto b4It = std::next(arr.cbegin(), 4);
+        for (auto it = bIt; it != b4It; ++it)
+            printf("%i,", *it);
+        printf("...");
+        auto eIt = arr.cend();
+        auto e4It = std::prev(arr.cend(), 4);
+        for (auto it = e4It; it != eIt; ++it)
+            printf("%i,", *it);
+    }
     printf("\n");
 }
 
@@ -51,7 +68,8 @@ GLuint createSSBO(const std::vector<int> &data, int index /*binding index in sha
     return ssbo;
 }
 
-void readSSBO(GLuint ssbo, std::vector<int> &outputs) {
+void readSSBO(GLuint ssbo, std::vector<int> &outputs)
+{
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
     glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int) * outputs.size(), outputs.data());
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
@@ -65,27 +83,43 @@ int main()
         return 1;
     }
 
+    printGLInfo();
+    GLTime computeTime;
+
     // Compile the compute shader and get its handle
     GLuint computeHandle = createComputeShader("ssbo_sample.comp");
 
-    // Create input data of 10 integers
-    int nbIntegers = 10;
+    // Create input data
+    int nbIntegers = 8;
+    //int nbIntegers = 1 << 24; // 16 millions of integers
     auto inputs = createSuccessiveVector(nbIntegers);
     printArrays("inputs", inputs);
+
+    auto tStart = std::chrono::high_resolution_clock::now();
 
     // Create two shader storage objects (one for input and one for output)
     GLuint inputSSBO = createSSBO(inputs, 0);
     GLuint outputSSBO = createSSBO(std::vector<int>(inputs.size(), 0), 1);
 
     // Execute the compute shader
+    computeTime.start();
     glUseProgram(computeHandle);
     glDispatchCompute(nbIntegers, 1, 1);
-    GLErrorCheck("Dispatch compute shader");
+    glMemoryBarrier(GL_ALL_BARRIER_BITS);
+    computeTime.end();
 
     // Read result back to CPU
     auto outputs = std::vector<int>(inputs.size());
     readSSBO(outputSSBO, outputs);
+    auto tEnd = std::chrono::high_resolution_clock::now();
     printArrays("outputs", outputs);
+
+    // Print timestamp
+    printf("\n");
+    printf("========== Time execution ================\n");
+    printf("Compute execution = %f ms\n", computeTime.timeInMs());
+    printf("Total execution   = %f ms\n", std::chrono::duration<double, std::milli>(tEnd - tStart).count());
+    printf("==========================================\n");
 
     closeGL();
 
