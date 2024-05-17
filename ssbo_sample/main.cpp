@@ -1,8 +1,8 @@
 // Software Name : compute_shader_samples
-// SPDX-FileCopyrightText: Copyright (c) 2023 Orange
-// SPDX-License-Identifier: BSD-3-Clause
+// SPDX-FileCopyrightText: Copyright (c) 2024 Cédric CHEDALEUX
+// SPDX-License-Identifier: MIT
 //
-// This software is distributed under the BSD License;
+// This software is distributed under the MIT License;
 // see the LICENSE file for more details.
 //
 // Author: Cédric CHEDALEUX <cedric.chedaleux@orange.com> et al
