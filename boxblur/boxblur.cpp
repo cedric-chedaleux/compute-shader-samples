@@ -39,10 +39,11 @@ int main()
         return 1;
     }
 
+    GLTime computeTime;
     printGLInfo();
 
     // Compile the compute shader and get its handle
-    GLuint computeHandle = createComputeShader("convert2bw.comp");
+    GLuint computeHandle = createComputeShader("boxblur.comp");
 
     // Square image with power of two size
     int w;
@@ -50,7 +51,7 @@ int main()
     int numChannels = 4;
 
     // Load an image to a texture
-    std::string inputFilePath = getBinDirectory() + "Lenna.png";
+    std::string inputFilePath = getBinDirectory() + "landscape.jpg";
     int inputNumChannels;
     auto input = stbi_load(inputFilePath.c_str(), &w, &h, &inputNumChannels, numChannels); // Force image to load with 4 channels
     if (!input) {
@@ -64,15 +65,23 @@ int main()
     GLuint outTex = createTextureStorage(1, GL_WRITE_ONLY, w, h); // Compute shader only write to RGBA format texture
 
     // Execute the compute shader in 32x32-size workground
+    computeTime.start();
     glUseProgram(computeHandle);
     glDispatchCompute(w / 32 , h / 32, 1);
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
+    computeTime.end();
     
     // Buffer with 4 1-byte channels to store the texture data
     auto img = readTextureStorage(outTex, numChannels, w, h);
-    const char* imgfile = "bw.png";
+    const char* imgfile = "blur.png";
     stbi_write_png(imgfile, w, h, numChannels /* bytes per pixel */, img.data(), w * numChannels);
     printf("Image saved to '%s'\n", imgfile);
+    
+    // Print timestamp
+    printf("\n");
+    printf("========== Time execution ================\n");
+    printf("Compute execution = %f ms\n", computeTime.timeInMs());
+    printf("==========================================\n");
 
     closeGL();
 

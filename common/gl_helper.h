@@ -123,6 +123,29 @@ GLuint createComputeShader(const std::string& filename)
     return progHandle;
 }
 
+std::vector<uint8_t> readTextureStorage(GLuint tex, int numChannels, int width, int height) {
+    std::vector<uint8_t> img(width * height * numChannels);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE, img.data());
+    return img;
+}
+
+
+GLuint createTextureStorage(GLuint unit, GLenum access, int width, int height, unsigned char* data = nullptr) {
+    GLuint tex;
+    GLenum internalFormat = GL_RGBA8UI; // Each pixel will be stored in 4 unsigned integer [0,255]
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexStorage2D(GL_TEXTURE_2D, 1, internalFormat, width, height);
+    if (data) {
+        glTexSubImage2D(GL_TEXTURE_2D, 0 /* mipmap level */, 0,0, width, height, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE, data);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindImageTexture(unit, tex, 0, GL_FALSE, 0, access, internalFormat);
+    return tex;
+}
+
 GLFWwindow *offscreen_context = nullptr;
 
 // Create an OpenGL context

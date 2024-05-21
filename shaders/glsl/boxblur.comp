@@ -1,0 +1,47 @@
+#version 430
+
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+// We could have used a texture sampler to access our image here, but we do not need
+// texture sampling (interpolation, texels...), so imageLoad is sufficient to get access
+// to our image data
+layout(binding = 0, rgba8ui) readonly uniform uimage2D inImage;
+layout(binding = 1, rgba8ui) writeonly uniform uimage2D outImage;
+
+shared uvec4 pixels[1024]; // 1024 * 8 * 4 = 32kB => matrix instead of 1D-array
+
+uvec4 computeBlurPixel(ivec2 pos, uint width, uint height, int radius) {
+    // Compute the pixel value for a pixel based on
+    // average of its neighbors (<radius>x<radius>)
+    uvec4 sum = uvec4(0,0,0,255);
+    int nbPixels = 0;
+    for (int i = max(0, pos.x - radius); i <= min(pos.x + radius, width); ++i) {
+        for (int j = max(0, pos.y - radius); j <= min(pos.y + radius, height); ++j) {
+            //sum += imageLoad(inImage, ivec2(i,j));
+
+            if (i < gl_WorkGroupID.x * gl_WorkGroupSize.x ||
+                i >= (gl_WorkGroupID.x + 1) * gl_WorkGroupSize.x ||
+                j < gl_WorkGroupID.y * gl_WorkGroupSize.y ||
+                j >= (gl_WorkGroupID.y + 1) * gl_WorkGroupSize.y) {
+               sum += imageLoad(inImage, ivec2(i,j));
+            }
+            else {
+            int index = i - int(gl_WorkGroupID.x * gl_WorkGroupSize.x) + 
+                        (j - int(gl_WorkGroupID.y * gl_WorkGroupSize.y)) * int(gl_WorkGroupSize.x);
+               sum += pixels[index];
+            }
+            nbPixels++;
+        }
+    }
+    return sum / nbPixels;
+}
+
+void main() {
+    ivec2 threadIndex = ivec2(gl_GlobalInvocationID.xy);
+    // First, cache pixel value in the shared memory => see https://www.slideshare.net/slideshow/siggraph-2012-nvidia-opengl-for-2012/14019812
+    // Warning: 16x16 pixels
+    pixels[gl_LocalInvocationIndex] = imageLoad(inImage, threadIndex);
+    // memoryBarrier();
+    uvec4 color = computeBlurPixel(threadIndex, gl_WorkGroupSize.x * gl_NumWorkGroups.x, gl_WorkGroupSize.y * gl_NumWorkGroups.y, 5);
+    imageStore(outImage, threadIndex, color);
+}
