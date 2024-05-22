@@ -1,6 +1,6 @@
 #version 430
 
-layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
 // We could have used a texture sampler to access our image here, but we do not need
 // texture sampling (interpolation, texels...), so imageLoad is sufficient to get access
@@ -8,40 +8,59 @@ layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 layout(binding = 0, rgba8ui) readonly uniform uimage2D inImage;
 layout(binding = 1, rgba8ui) writeonly uniform uimage2D outImage;
 
-shared uvec4 pixels[1024]; // 1024 * 8 * 4 = 32kB => matrix instead of 1D-array
+shared uvec4 pixels[20][20]; // 20 = 16 /* tileSize */ + 2 * 2 /* blurOffset * 2 */
 
-uvec4 computeBlurPixel(ivec2 pos, uint width, uint height, int radius) {
-    // Compute the pixel value for a pixel based on
-    // average of its neighbors (<radius>x<radius>)
-    uvec4 sum = uvec4(0,0,0,255);
-    int nbPixels = 0;
-    for (int i = max(0, pos.x - radius); i <= min(pos.x + radius, width); ++i) {
-        for (int j = max(0, pos.y - radius); j <= min(pos.y + radius, height); ++j) {
-            //sum += imageLoad(inImage, ivec2(i,j));
 
-            if (i < gl_WorkGroupID.x * gl_WorkGroupSize.x ||
-                i >= (gl_WorkGroupID.x + 1) * gl_WorkGroupSize.x ||
-                j < gl_WorkGroupID.y * gl_WorkGroupSize.y ||
-                j >= (gl_WorkGroupID.y + 1) * gl_WorkGroupSize.y) {
-               sum += imageLoad(inImage, ivec2(i,j));
-            }
-            else {
-            int index = i - int(gl_WorkGroupID.x * gl_WorkGroupSize.x) + 
-                        (j - int(gl_WorkGroupID.y * gl_WorkGroupSize.y)) * int(gl_WorkGroupSize.x);
-               sum += pixels[index];
-            }
-            nbPixels++;
+ivec2 clampLocation(ivec2 xy, ivec2 imageSize) {
+    return clamp(xy, ivec2(0,0), imageSize);
+}
+
+uvec4 computeBlurPixelWithSharedMemory(ivec2 pixel_xy) {
+    ivec2 tileSize = ivec2(16,16);
+    ivec2 local_pixel_xy = ivec2(gl_LocalInvocationID.xy);
+    ivec2 imageSize = ivec2(gl_WorkGroupSize.x * gl_NumWorkGroups.x, gl_WorkGroupSize.y * gl_NumWorkGroups.y);
+
+    // Read the image's neighborhood into a shared pixel array
+    for (int j = 0; j < 20; j += tileSize.y) {
+        for (int i = 0; i < 20; i += tileSize.x) {
+            if ( local_pixel_xy.x + i < 20 &&
+                 local_pixel_xy.y + j < 20) {
+                    ivec2 read_at = clampLocation(pixel_xy + ivec2(i, j) - 2, imageSize);
+                    pixels[local_pixel_xy.y + j][local_pixel_xy.x + i] = imageLoad(inImage, read_at);
+                 }
         }
     }
-    return sum / nbPixels;
+
+    // Make sure all threads have prefetched input pixels data
+    memoryBarrierShared();
+    barrier();
+
+    // Compute blur pixels from its neighborhood
+    uvec4 result = uvec4(0);
+    for (int j = 0; j < 5; ++j) {
+        for (int i = 0; i < 5; ++i) {
+            result += pixels[local_pixel_xy.y + j][local_pixel_xy.x + i] / 25;
+        }
+    }
+    return result;
+}
+
+uvec4 computeBlurPixel(ivec2 pixel_xy) {
+    ivec2 imageSize = ivec2(gl_WorkGroupSize.x * gl_NumWorkGroups.x, gl_WorkGroupSize.y * gl_NumWorkGroups.y);
+
+    uvec4 result = uvec4(0);
+    for (int j = 0; j < 5; ++j) {
+        for (int i = 0; i < 5; ++i) {
+            ivec2 read_at = clampLocation(pixel_xy + ivec2(i, j) - 2, imageSize);
+            result += imageLoad(inImage, read_at) / 25;
+        }
+    }
+    return result;
 }
 
 void main() {
-    ivec2 threadIndex = ivec2(gl_GlobalInvocationID.xy);
-    // First, cache pixel value in the shared memory => see https://www.slideshare.net/slideshow/siggraph-2012-nvidia-opengl-for-2012/14019812
-    // Warning: 16x16 pixels
-    pixels[gl_LocalInvocationIndex] = imageLoad(inImage, threadIndex);
-    // memoryBarrier();
-    uvec4 color = computeBlurPixel(threadIndex, gl_WorkGroupSize.x * gl_NumWorkGroups.x, gl_WorkGroupSize.y * gl_NumWorkGroups.y, 5);
-    imageStore(outImage, threadIndex, color);
+    ivec2 pixel_xy = ivec2(gl_GlobalInvocationID.xy);
+    uvec4 color = computeBlurPixel(pixel_xy);
+    //uvec4 color = computeBlurPixelWithSharedMemory(pixel_xy);
+    imageStore(outImage, pixel_xy, color);
 }
