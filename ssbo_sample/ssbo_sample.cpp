@@ -21,6 +21,7 @@
 #include <iterator>
 #include <numeric>
 #include <chrono>
+#include <algorithm>
 
 #include "helper.h"
 #include "gl_helper.h"
@@ -75,6 +76,17 @@ void readSSBO(GLuint ssbo, std::vector<int> &outputs)
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 }
 
+int times2(const int i) {
+    return i * 2;
+}
+
+void cpuTimes2Vector(const std::vector<int>& inputs, std::vector<int>& results) {
+    auto tStart = std::chrono::high_resolution_clock::now();
+    std::transform(inputs.begin(), inputs.end(), results.begin(), times2);
+    auto tEnd = std::chrono::high_resolution_clock::now();
+    printf("CPU execution   = %f ms\n", std::chrono::duration<double, std::milli>(tEnd - tStart).count());
+}
+
 int main()
 {
     if (!initGL())
@@ -90,10 +102,16 @@ int main()
     GLuint computeHandle = createComputeShader("ssbo_sample.comp");
 
     // Create input data
-    int nbIntegers = 8;
-    //int nbIntegers = 1 << 24; // 16 millions of integers
+    //int nbIntegers = 8;
+    int nbIntegers = 1 << 24; // 16 millions of integers
     auto inputs = createSuccessiveVector(nbIntegers);
     printArrays("inputs", inputs);
+
+    // Prepare vector to hold results
+    auto outputs = std::vector<int>(inputs.size());
+
+    // Perform CPU computation
+    cpuTimes2Vector(inputs, outputs);
 
     auto tStart = std::chrono::high_resolution_clock::now();
 
@@ -109,7 +127,6 @@ int main()
     computeTime.end();
 
     // Read result back to CPU
-    auto outputs = std::vector<int>(inputs.size());
     readSSBO(outputSSBO, outputs);
     auto tEnd = std::chrono::high_resolution_clock::now();
     printArrays("outputs", outputs);
