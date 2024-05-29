@@ -110,9 +110,7 @@ int main()
     // Prepare vector to hold results
     auto outputs = std::vector<int>(inputs.size());
 
-    // Perform CPU computation
-    cpuTimes2Vector(inputs, outputs);
-
+    // Profiling
     auto tStart = std::chrono::high_resolution_clock::now();
 
     // Create two shader storage objects (one for input and one for output)
