@@ -42,7 +42,7 @@ int main()
     printGLInfo();
 
     // Compile the compute shader and get its handle
-    GLuint computeHandle = createComputeShader("convert2bw.comp");
+    GLuint computeHandle = createComputeShader("convert2gray.comp");
 
     // Square image with power of two size
     int w;

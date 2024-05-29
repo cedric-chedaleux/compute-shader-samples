@@ -86,11 +86,11 @@ std::string getInstallDirectory()
     return installDirectory;
 }
 
-std::string getGLSLShaderDirectory() {
+std::string getShaderDirectory() {
 #ifdef __linux__
-    return getInstallDirectory() + "/shaders/glsl/";
+    return getInstallDirectory() + "/shaders/";
 #elif _WIN32
-    return getInstallDirectory() + "\\shaders\\glsl\\";
+    return getInstallDirectory() + "\\shaders\\";
 #else
     return "";
 #endif

@@ -83,7 +83,7 @@ GLuint createComputeShader(const std::string& filename)
     GLuint cs = glCreateShader(GL_COMPUTE_SHADER);
 
     std::string csSrc;
-    std::string shaderFilePath = getGLSLShaderDirectory() + filename;
+    std::string shaderFilePath = getShaderDirectory() + filename;
     if (!loadFile(shaderFilePath, csSrc))
     {
         fprintf(stderr, "Error in loading the compute shader %s\n", shaderFilePath.c_str());
@@ -197,15 +197,13 @@ public:
 
     float timeInMs() const
     {
-        int done;
-        glGetQueryObjectiv(query[0], GL_QUERY_RESULT_AVAILABLE, &done);
-        if (!done)
+        if (!glIsQuery(query[0]) == GL_TRUE)
         {
             return 0.f;
         }
         GLuint64 time;
         glGetQueryObjectui64v(query[0], GL_QUERY_RESULT, &time);
-        return time / 1e6;
+        return time * 1e-6;
     }
 
     unsigned int query[1];

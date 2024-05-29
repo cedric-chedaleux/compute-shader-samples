@@ -25,3 +25,4 @@ endif()
 # Install
 install(TARGETS ${PROJECT_NAME})
 install(FILES $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}> TYPE BIN)
+install(FILES img_generation.comp DESTINATION shaders)

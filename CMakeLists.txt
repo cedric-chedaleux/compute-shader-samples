@@ -28,10 +28,4 @@ target_include_directories(gl3w INTERFACE
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/gl3w>)
 target_link_libraries(gl3w INTERFACE OpenGL::GL ${CMAKE_DL_LIBS})
 
-add_subdirectory(ssbo_sample)
-add_subdirectory(img_generation)
-add_subdirectory(convert2gray)
-add_subdirectory(boxblur)
-
-
-install(DIRECTORY shaders/ DESTINATION shaders)
+add_subdirectory(opengl)

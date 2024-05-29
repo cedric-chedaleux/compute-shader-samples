@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.13)
+add_subdirectory(ssbo_sample)
+add_subdirectory(img_generation)
+add_subdirectory(convert2gray)
+add_subdirectory(boxblur)

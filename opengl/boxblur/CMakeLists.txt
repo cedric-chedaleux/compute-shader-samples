@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.13)
-project(ssbo_sample)
+project(boxblur)
 
 include_directories("../common")
 add_executable(${PROJECT_NAME}
-  ssbo_sample.cpp
+  boxblur.cpp
 )
 
 find_package(OpenGL REQUIRED)
@@ -25,3 +25,5 @@ endif()
 # Install
 install(TARGETS ${PROJECT_NAME})
 install(FILES $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}> TYPE BIN)
+install(FILES landscape.jpg DESTINATION bin)
+install(FILES boxblur.comp DESTINATION shaders)
