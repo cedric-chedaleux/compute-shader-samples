@@ -30,7 +30,7 @@ target_link_libraries(gl3w INTERFACE OpenGL::GL ${CMAKE_DL_LIBS})
 
 add_subdirectory(ssbo_sample)
 add_subdirectory(img_generation)
-add_subdirectory(convert2bw)
+add_subdirectory(convert2gray)
 add_subdirectory(boxblur)
 
 

@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.13)
-project(convert2bw)
+project(convert2gray)
 
 include_directories("../common")
 add_executable(${PROJECT_NAME}
-  convert2bw.cpp
+  convert2gray.cpp
 )
 
 find_package(OpenGL REQUIRED)
