@@ -63,9 +63,10 @@ int main()
     // Create the texture that will host the Black and white image
     GLuint outTex = createTextureStorage(1, GL_WRITE_ONLY, w, h); // Compute shader only write to RGBA format texture
 
-    // Execute the compute shader in 32x32-size workground
+    // Execute the compute shader with 16x16-size workgroups
     glUseProgram(computeHandle);
-    glDispatchCompute(w / 32 , h / 32, 1);
+    int localSize = 16;
+    glDispatchCompute((w + localSize - 1) / localSize , (h + localSize - 1) / localSize, 1);
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
     
     // Buffer with 4 1-byte channels to store the texture data
