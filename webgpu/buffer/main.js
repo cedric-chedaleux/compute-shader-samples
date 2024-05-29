@@ -1,3 +1,12 @@
+// Software Name : compute_shader_samples
+// SPDX-FileCopyrightText: Copyright (c) 2024 Cédric CHEDALEUX
+// SPDX-License-Identifier: MIT
+//
+// This software is distributed under the MIT License;
+// see the LICENSE file for more details.
+//
+// Author: Cédric CHEDALEUX <cedric.chedaleux@orange.com> et al
+
 async function main() {
   const adapter = await navigator.gpu?.requestAdapter();
   const device = await adapter?.requestDevice();
