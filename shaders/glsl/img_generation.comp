@@ -5,5 +5,7 @@ layout(binding = 0, rgba8ui) writeonly uniform uimage2D texture;
 
 void main() {
     ivec2 threadIndex = ivec2(gl_GlobalInvocationID.xy);
-    imageStore(texture, threadIndex, uvec4(vec2(gl_WorkGroupID.xy) / vec2(gl_NumWorkGroups.xy) * 255, 0, 255));
+    // Pixels from same workgroup will have same color
+    uvec4 color = uvec4(vec2(gl_WorkGroupID.xy) / vec2(gl_NumWorkGroups.xy) * 255, 0, 255);
+    imageStore(texture, threadIndex, color);
 }
