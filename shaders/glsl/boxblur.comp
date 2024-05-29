@@ -8,7 +8,7 @@ layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 layout(binding = 0, rgba8ui) readonly uniform uimage2D inImage;
 layout(binding = 1, rgba8ui) writeonly uniform uimage2D outImage;
 
-shared uvec4 pixels[20][20]; // 20 = 16 /* tileSize */ + 2 * 2 /* blurOffset * 2 */
+shared uvec4 pixels[20][20]; // 20 = 16 /* tileSize */ + 2 * 2 /* blurRaidus = 2 */
 
 
 ivec2 clampLocation(ivec2 xy, ivec2 imageSize) {
@@ -36,31 +36,31 @@ uvec4 computeBlurPixelWithSharedMemory(ivec2 pixel_xy) {
     barrier();
 
     // Compute blur pixels from its neighborhood
-    uvec4 result = uvec4(0);
+    ivec4 result = ivec4(0);
     for (int j = 0; j < 5; ++j) {
         for (int i = 0; i < 5; ++i) {
-            result += pixels[local_pixel_xy.y + j][local_pixel_xy.x + i] / 25;
+            result += ivec4(pixels[local_pixel_xy.y + j][local_pixel_xy.x + i]);
         }
     }
-    return result;
+    return uvec4(result / 25);
 }
 
 uvec4 computeBlurPixel(ivec2 pixel_xy) {
     ivec2 imageSize = ivec2(gl_WorkGroupSize.x * gl_NumWorkGroups.x, gl_WorkGroupSize.y * gl_NumWorkGroups.y);
-
-    uvec4 result = uvec4(0);
+    ivec4 result = ivec4(0);
     for (int j = 0; j < 5; ++j) {
         for (int i = 0; i < 5; ++i) {
             ivec2 read_at = clampLocation(pixel_xy + ivec2(i, j) - 2, imageSize);
-            result += imageLoad(inImage, read_at) / 25;
+            result += ivec4(imageLoad(inImage, read_at));
         }
     }
-    return result;
+    return uvec4(result / 25);
 }
 
 void main() {
     ivec2 pixel_xy = ivec2(gl_GlobalInvocationID.xy);
-    uvec4 color = computeBlurPixel(pixel_xy);
-    //uvec4 color = computeBlurPixelWithSharedMemory(pixel_xy);
-    imageStore(outImage, pixel_xy, color);
+    //uvec4 color = computeBlurPixel(pixel_xy);
+    uvec4 color = computeBlurPixelWithSharedMemory(pixel_xy);
+
+    imageStore(outImage, pixel_xy, uvec4(color.rgb, 255));
 }

@@ -67,7 +67,8 @@ int main()
     // Execute the compute shader in 16x16-size workground
     computeTime.start();
     glUseProgram(computeHandle);
-    glDispatchCompute(w / 16 , h / 16, 1);
+    int localSize = 16;
+    glDispatchCompute((w + localSize - 1) / localSize , (h + localSize - 1) / localSize, 1);
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
     computeTime.end();
     
